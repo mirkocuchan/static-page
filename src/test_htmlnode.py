@@ -1,6 +1,6 @@
 import unittest
 
-from htmlnode import HTMLNode
+from htmlnode import HTMLNode, LeafNode
 
 
 
@@ -34,8 +34,26 @@ class TestHTMLNode(unittest.TestCase):
         "HTMLNode('p', 'text', None, {'href': 'https://www.google.com', 'target': '_blank'})",
         repr(node)
         )
+
     def test_leaf_to_html_p(self):
-        node = HTMLNode.LeafNode("p", "Hello, world!")
+        node = LeafNode("p", "Hello, world!")
         self.assertEqual(node.to_html(), "<p>Hello, world!</p>")
+    
+    def test_repr_leaf(self):
+        node = LeafNode(
+        "p",
+        "text",
+        {"href": "https://www.google.com", "target": "_blank"}
+        )
+        self.assertEqual(
+        "LeafNode('p', 'text', {'href': 'https://www.google.com', 'target': '_blank'})",
+        repr(node)
+        )
+    def test_leaf_to_html(self):
+        node = LeafNode("p", "text", {'href': 'https://www.google.com'})
+        self.assertEqual(node.to_html(), "<p href='https://www.google.com'>text</p>")
+    
+        
+
 if __name__ == "__main__":
     unittest.main()
