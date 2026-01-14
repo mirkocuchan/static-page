@@ -1,7 +1,7 @@
 from enum import Enum
 from htmlnode import HTMLNode, ParentNode
 from delimiter import text_to_textnodes
-from textnode import text_node_to_html_node
+from textnode import text_node_to_html_node, TextNode, TextType
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
@@ -61,7 +61,7 @@ def block_to_block_type(block):
 def block_type_to_tag(block_type, block_text):
     if block_type == BlockType.PARAGRAPH:
         return "p"
-    if block_type == BlockType.HEADINGS:
+    if block_type == BlockType.HEADING:
         num_of_hashtag = 0
         for char in block_text:
             if char == "#":
@@ -126,7 +126,7 @@ def markdown_to_html_node(markdown):
         tag = block_type_to_tag(block_type, block)
 
         if block_type == BlockType.UNORDERED_LIST:
-            block = eliminate_symbol(block)
+            block = eliminate_symbol(block, block_type)
             lines = block.split("\n")
             array_of_parent_nodes = []
 
@@ -140,18 +140,43 @@ def markdown_to_html_node(markdown):
             block_parent_node = ParentNode(tag, array_of_parent_nodes, None)
             block_parent_nodes.append(block_parent_node)
 
-        if block_type == BlockType.ORDERED_LIST:
-            return "ol"
+        elif block_type == BlockType.ORDERED_LIST:
+            block = eliminate_symbol(block, block_type)
+            lines = block.split("\n")
+            array_of_parent_nodes = []
+
+            for line in lines:
+                text_nodes = text_to_textnodes(line)
+                html_nodes = []
+                for text_node in text_nodes:
+                    html_nodes.append(text_node_to_html_node(text_node))
+                array_of_parent_nodes.append(ParentNode("li", html_nodes, None))
+                      
+            block_parent_node = ParentNode(tag, array_of_parent_nodes, None)
+            block_parent_nodes.append(block_parent_node)
         
-        block = eliminate_symbol(block)
+        elif block_type == BlockType.CODE:
+            block = eliminate_symbol(block, block_type)
+            block = block + "\n" 
+            
+            text_node = TextNode(block, TextType.TEXT)
+            html_node = text_node_to_html_node(text_node)
 
-        text_nodes = text_to_textnodes(block)
-        array_of_html_nodes = []
-        for text_node in text_nodes:
-            array_of_html_nodes.append(text_node_to_html_node(text_node))
+            parent_code = ParentNode("code", [html_node], None)
+            parent_pre = ParentNode("pre", [parent_code], None)
 
-        block_parent_node = ParentNode(block_type_to_tag(block_type, block), array_of_html_nodes, None)
-        block_parent_nodes.append(block_parent_node)
+            block_parent_nodes.append(parent_pre)
+
+        else:
+            block = eliminate_symbol(block, block_type)
+            block = " ".join(block.split())
+            text_nodes = text_to_textnodes(block)
+            array_of_html_nodes = []
+            for text_node in text_nodes:
+                array_of_html_nodes.append(text_node_to_html_node(text_node))
+
+            block_parent_node = ParentNode(tag, array_of_html_nodes, None)
+            block_parent_nodes.append(block_parent_node)
 
     parent_of_html_parents = ParentNode("div", block_parent_nodes, None)
     return parent_of_html_parents
