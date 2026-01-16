@@ -1,14 +1,19 @@
-import os, shutil, pathlib
+import os, shutil, pathlib, sys
 from textnode import *
 from markdown_blocks import eliminate_symbol, BlockType, markdown_to_html_node
 
 def main():    
-    copy_function("./static", "./public")
+    copy_function("./static", "./docs")
     
     template_path = "template.html"
+    
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
+    else:
+        basepath = "/"
 
-    generate_pages_recursive("./content", template_path, "./public")
-
+    generate_pages_recursive("./content", template_path, "./docs", basepath)
+    
 def copy_function(source_directory, destination_directory, first_call=True):
     if first_call and os.path.exists(destination_directory):
         shutil.rmtree(destination_directory)
@@ -31,7 +36,7 @@ def extract_title(markdown):
             return line[2:].strip() 
     raise Exception("No h1 header found")
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     
     with open(from_path, "r") as f:
@@ -48,6 +53,9 @@ def generate_page(from_path, template_path, dest_path):
     final_html = template.replace("{{ Title }}", title)
     final_html = final_html.replace("{{ Content }}", html_content)
 
+    final_html = final_html.replace("{{ base_path }}", basepath)
+    final_html = final_html.replace("{{ base_path }}", basepath)
+
     dest_dir = os.path.dirname(dest_path)
     
     if dest_dir != "":
@@ -56,15 +64,15 @@ def generate_page(from_path, template_path, dest_path):
     with open(dest_path, "w") as f:
         f.write(final_html)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     all_files_in_dir_path_content = os.listdir(dir_path_content)
     for file in all_files_in_dir_path_content:
         if not os.path.isfile(os.path.join(dir_path_content, file)): 
-            generate_pages_recursive(os.path.join(dir_path_content, file), template_path, os.path.join(dest_dir_path, file))
+            generate_pages_recursive(os.path.join(dir_path_content, file), template_path, os.path.join(dest_dir_path, file), basepath)
         else:
             if pathlib.Path(os.path.join(dir_path_content, file)).suffix == ".md":
                 dest_html_path = pathlib.Path(os.path.join(dest_dir_path, file)).with_suffix(".html")
-                generate_page(os.path.join(dir_path_content, file), template_path, dest_html_path)
+                generate_page(os.path.join(dir_path_content, file), template_path, dest_html_path, basepath)
     
 if __name__ == "__main__":
         main()
