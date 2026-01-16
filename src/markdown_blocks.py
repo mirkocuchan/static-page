@@ -30,14 +30,9 @@ def block_to_block_type(block):
     
     lines = block.split("\n")
 
-    if block.startswith("> "):
-        all_quotes = True
-        for line in lines:
-            if not line.startswith("> "):
-                all_quotes = False
-                break
-        if all_quotes == True:
-            return BlockType.QUOTE
+    
+    if all(line.lstrip().startswith(">") for line in lines):
+        return BlockType.QUOTE
 
     if block.startswith("- "):
         all_ul = True
@@ -94,8 +89,8 @@ def eliminate_symbol(block, block_type):
         lines = block.split("\n")
         cleaned_lines = []
         for line in lines:
-            cleaned_lines.append(line[2:])
-        return "\n".join(cleaned_lines)
+            cleaned_lines.append(line.lstrip().lstrip(">").strip())
+        return " ".join(cleaned_lines)
     
     if block_type == BlockType.CODE:
         return block.strip("`").strip()
@@ -112,16 +107,14 @@ def eliminate_symbol(block, block_type):
         cleaned_lines = []
         for line in lines:
             parts = line.split(". ", 1)[1]
-            if len(parts) > 1:
-                cleaned_lines.append(parts[1])
-            else:
-                cleaned_lines.append(parts[0])
+            cleaned_lines.append(parts) 
         return "\n".join(cleaned_lines)
 
 def markdown_to_html_node(markdown): 
     blocks = markdown_to_blocks(markdown)
     block_parent_nodes = []
     for block in blocks:
+        
         block_type = block_to_block_type(block)
         tag = block_type_to_tag(block_type, block)
 
@@ -158,7 +151,7 @@ def markdown_to_html_node(markdown):
         elif block_type == BlockType.CODE:
             block = eliminate_symbol(block, block_type)
             block = block + "\n" 
-            
+
             text_node = TextNode(block, TextType.TEXT)
             html_node = text_node_to_html_node(text_node)
 
@@ -169,7 +162,8 @@ def markdown_to_html_node(markdown):
 
         else:
             block = eliminate_symbol(block, block_type)
-            block = " ".join(block.split())
+            if block_type != BlockType.QUOTE:
+                block = " ".join(block.split())
             text_nodes = text_to_textnodes(block)
             array_of_html_nodes = []
             for text_node in text_nodes:
