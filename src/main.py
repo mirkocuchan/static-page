@@ -2,15 +2,23 @@ import os, shutil, pathlib, sys
 from textnode import *
 from markdown_blocks import eliminate_symbol, BlockType, markdown_to_html_node
 
-def main():    
-    copy_function("./static", "./docs")
-    
-    template_path = "template.html"
-    
+dir_path_static = "./static"
+dir_path_docs = "./docs"
+dir_path_content = "./content"
+template_path = "./template.html"
+default_basepath = "/"
+
+def main():
+    basepath = default_basepath
     if len(sys.argv) > 1:
         basepath = sys.argv[1]
-    else:
-        basepath = "/"
+
+    print("Deleting docs directory...")
+    if os.path.exists(dir_path_docs):
+        shutil.rmtree(dir_path_docs)
+
+    print("Copying static files to docs directory...")
+    copy_function(dir_path_static, dir_path_docs)
 
     generate_pages_recursive("./content", template_path, "./docs", basepath)
     
@@ -53,10 +61,9 @@ def generate_page(from_path, template_path, dest_path, basepath):
     final_html = template.replace("{{ Title }}", title)
     final_html = final_html.replace("{{ Content }}", html_content)
 
-    final_html = final_html.replace("{{ base_path }}", basepath)
-    
-    final_html = final_html.replace('href="/', f'href="{basepath}')
-    final_html = final_html.replace('src="/', f'src="{basepath}')
+    final_html = final_html.replace('href="/', 'href="' + basepath)
+    final_html = final_html.replace('src="/', 'src="' + basepath)
+
     dest_dir = os.path.dirname(dest_path)
     
     if dest_dir != "":
