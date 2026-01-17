@@ -6,7 +6,7 @@ dir_path_static = "./static"
 dir_path_docs = "./docs"
 dir_path_content = "./content"
 template_path = "./template.html"
-default_basepath = "/"
+default_basepath = "/static-page/"
 
 def main():
     basepath = default_basepath
@@ -57,12 +57,13 @@ def generate_page(from_path, template_path, dest_path, basepath):
     html_content = html_node.to_html()
 
     title = extract_title(markdown_content)
-    
+
     final_html = template.replace("{{ Title }}", title)
     final_html = final_html.replace("{{ Content }}", html_content)
 
-    final_html = final_html.replace('href="/', 'href="' + basepath)
-    final_html = final_html.replace('src="/', 'src="' + basepath)
+    final_html = final_html.replace('href="/', f'href="{basepath}/')
+    final_html = final_html.replace('src="/', f'src="{basepath}/')
+
 
     dest_dir = os.path.dirname(dest_path)
     
